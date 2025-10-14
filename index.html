@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Wide Format Printing Order Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The app is designed as a dynamic, single-page "Printing Cost Calculator & Order Form". This task-oriented structure is more user-friendly than a static form. Users can dynamically add/remove print jobs, enter dimensions/materials, and see the total cost update in real-time in an "Order Summary" section. A donut chart visualizes the cost breakdown per job. This interactive approach allows users to experiment with options to fit a budget and reduces calculation errors, directly improving upon the static nature of the source document. -->
+    <!-- Visualization & Content Choices: Price Table -> Inform -> JS Object & Static HTML Table -> Used for calculation -> Justification: Centralizes data for script, provides user reference -> JS/HTML. Job Items -> Input/Organize -> Dynamic "Job Cards" with form inputs -> User input triggers JS calculation -> Justification: Flexible, allows multiple items, interactive -> HTML/JS. Total Cost -> Synthesize/Compare -> Donut Chart -> Dynamically updated with job costs -> Justification: Provides an immediate visual breakdown of where costs are allocated -> Chart.js/Canvas. Contact/File Info -> Input -> Standard HTML Form, now split by job -> User entry -> Justification: Standard and effective for data capture -> HTML. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        /* PRINT STYLES: Hides the main app and shows the printable area for PDF generation */
+        @media print {
+            .main-app {
+                display: none !important;
+            }
+            .printable-area {
+                display: block !important;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="main-app" class="container mx-auto p-4 sm:p-6 lg:p-8 main-app">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Wide Format Printing Calculator</h1>
+            <p class="text-lg text-slate-600 mt-2">For The UPS Store #4066 | Customer: Westmont High School</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+            <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-900">Build Your Order</h2>
+                    <button id="add-job-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-300 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Job
+                    </button>
+                </div>
+                <div id="job-items-container" class="space-y-6">
+                </div>
+            </div>
+            
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">Order Summary</h2>
+                     <p class="text-sm text-slate-500 mb-4 text-center">This section provides a real-time calculation of your print job costs. The chart below visualizes the cost distribution among your jobs, helping you understand the financial breakdown of your order at a glance.</p>
+                    <div class="chart-container mb-6">
+                        <canvas id="cost-breakdown-chart"></canvas>
+                    </div>
+                    <div class="space-y-3 text-lg">
+                        <div class="flex justify-between font-medium">
+                            <span>Subtotal (Job Cost):</span>
+                            <span id="summary-subtotal">$0.00</span>
+                        </div>
+                        <div id="minimum-surcharge-row" class="flex justify-between text-orange-600 font-semibold hidden">
+                            <span>Minimum Order Surcharge ($15.00):</span>
+                            <span id="summary-surcharge">$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>Tax (9.375%):</span>
+                            <span id="summary-tax">$0.00</span>
+                        </div>
+                        <hr>
+                        <div class="flex justify-between font-bold text-2xl text-indigo-600">
+                            <span>Total Due:</span>
+                            <span id="summary-total">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">Reference Prices</h2>
+                     <p class="text-sm text-slate-500 mb-4 text-center">Here are the pre-approved prices for Westmont High School. Select from these materials in each job card to calculate costs automatically.</p>
+                     <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="p-2 font-semibold">Material</th>
+                                    <th class="p-2 font-semibold">Max Width</th>
+                                    <th class="p-2 font-semibold">Price/sq.ft</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b"><td class="p-2">Matte Photo Paper</td><td class="p-2">44"</td><td class="p-2">$2.40</td></tr>
+                                <tr class="border-b"><td class="p-2">46# Bond</td><td class="p-2">36"</td><td class="p-2">$2.20</td></tr>
+                                <tr><td class="p-2">32# Bond</td><td class="p-2">36"</td><td class="p-2">$1.90</td></tr>
+                            </tbody>
+                        </table>
+                     </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="bg-white p-6 rounded-2xl shadow-lg mt-8">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Contact & File Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label for="contact-name" class="block text-sm font-medium text-slate-700 mb-1">Department/Contact Name</label><input type="text" id="contact-name" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
+                <div><label for="contact-email" class="block text-sm font-medium text-slate-700 mb-1">Contact Email</label><input type="email" id="contact-email" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
+                <div><label for="contact-phone" class="block text-sm font-medium text-slate-700 mb-1">Contact Phone</label><input type="tel" id="contact-phone" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
+                <div class="md:col-span-2 text-right"><button id="submit-order-btn" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300">Generate PDF</button></div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Hidden Printable Area for PDF Generation -->
+    <div id="printable-area" class="printable-area hidden">
+        <!-- Content will be injected by JavaScript before printing -->
+    </div>
+
+    <div id="submission-modal" class="modal-overlay hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full transform transition-all">
+            <h3 id="modal-title" class="text-2xl font-bold text-green-700 mb-4"></h3>
+            <p id="modal-message" class="text-slate-700 mb-6"></p>
+            <button id="modal-close-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Close</button>
+        </div>
+    </div>
+
+    <template id="job-item-template">
+        <div class="job-item border border-slate-200 p-4 rounded-xl">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-grow">
+                     <label class="block text-sm font-medium text-slate-700 mb-1">Job Description (Optional)</label>
+                     <input type="text" class="job-description w-full p-2 border border-slate-300 rounded-md text-lg font-semibold" placeholder="e.g., Main Hall Poster">
+                </div>
+                <button class="remove-job-btn text-slate-400 hover:text-red-600 ml-4 mt-8">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+            
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Associated File Name</label>
+                <input type="text" class="job-file-name w-full p-2 border border-slate-300 rounded-md" placeholder="e.g., poster_v2.pdf">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Dimensions (W x H inches)</label>
+                    <div class="flex items-center">
+                        <input type="number" class="job-width w-1/2 p-2 border border-slate-300 rounded-l-md" placeholder="W" min="1">
+                        <span class="p-2 border-y border-slate-300 bg-slate-50">x</span>
+                        <input type="number" class="job-height w-1/2 p-2 border border-slate-300 rounded-r-md" placeholder="H" min="1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                    <input type="number" class="job-quantity w-full p-2 border border-slate-300 rounded-md" value="1" min="1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Material</label>
+                    <select class="job-material w-full p-2 border border-slate-300 rounded-md bg-white">
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 text-right">
+                <span class="text-xl font-bold text-indigo-600 item-total">$0.00</span>
+            </div>
+        </div>
+    </template>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const materials = [
+                { name: 'Select a material...', price: 0, maxWidth: Infinity },
+                { name: 'Matte Photo Paper', price: 2.40, maxWidth: 44 },
+                { name: '46# Bond', price: 2.20, maxWidth: 36 },
+                { name: '32# Bond', price: 1.90, maxWidth: 36 }
+            ];
+            const TAX_RATE = 0.09375;
+            const MINIMUM_ORDER = 15.00;
+
+            const mainApp = document.getElementById('main-app');
+            const printableArea = document.getElementById('printable-area');
+            const addJobBtn = document.getElementById('add-job-btn');
+            const submitBtn = document.getElementById('submit-order-btn');
+            const closeBtn = document.getElementById('modal-close-btn');
+            const modalEl = document.getElementById('submission-modal');
+            const jobItemsContainer = document.getElementById('job-items-container');
+            const jobItemTemplate = document.getElementById('job-item-template');
+            
+            const summarySubtotalEl = document.getElementById('summary-subtotal');
+            const summarySurchargeEl = document.getElementById('summary-surcharge');
+            const minimumSurchargeRowEl = document.getElementById('minimum-surcharge-row');
+            const summaryTaxEl = document.getElementById('summary-tax');
+            const summaryTotalEl = document.getElementById('summary-total');
+
+            const ctx = document.getElementById('cost-breakdown-chart').getContext('2d');
+            let costChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#4f46e5', '#ec4899', '#22c55e', '#f97316', '#3b82f6', '#8b5cf6'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                     size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            function getMaterialName(price) {
+                const material = materials.find(m => m.price === price);
+                return material ? material.name : 'Unknown Material';
+            }
+
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+            }
+
+            function updateChart(labels, data) {
+                if(labels.length === 0) {
+                    labels.push('No items yet');
+                    data.push(1);
+                }
+                costChart.data.labels = labels;
+                costChart.data.datasets[0].data = data;
+                costChart.update();
+            }
+
+            function updateAllCalculations() {
+                const jobItems = jobItemsContainer.querySelectorAll('.job-item');
+                let subtotal = 0;
+                
+                const chartLabels = [];
+                const chartData = [];
+
+                jobItems.forEach((item, index) => {
+                    const width = parseFloat(item.querySelector('.job-width').value) || 0;
+                    const height = parseFloat(item.querySelector('.job-height').value) || 0;
+                    const quantity = parseInt(item.querySelector('.job-quantity').value) || 0;
+                    const materialSelect = item.querySelector('.job-material');
+                    const pricePerSqFt = parseFloat(materialSelect.value) || 0;
+                    const description = item.querySelector('.job-description').value.trim() || `Job #${index + 1}`;
+
+                    const sqInches = width * height;
+                    const sqFeet = sqInches / 144;
+                    const itemTotal = sqFeet * pricePerSqFt * quantity;
+
+                    item.querySelector('.item-total').textContent = formatCurrency(itemTotal);
+                    subtotal += itemTotal;
+                    
+                    if (itemTotal > 0) {
+                        chartLabels.push(description);
+                        chartData.push(itemTotal);
+                    }
+                });
+                
+                let surcharge = 0;
+                if (subtotal < MINIMUM_ORDER && subtotal > 0) {
+                    surcharge = MINIMUM_ORDER - subtotal;
+                }
+
+                const effectiveSubtotal = subtotal + surcharge;
+                const tax = effectiveSubtotal * TAX_RATE;
+                const total = effectiveSubtotal + tax;
+
+                // Update Display
+                if (surcharge > 0) {
+                    minimumSurchargeRowEl.classList.remove('hidden');
+                    summarySurchargeEl.textContent = formatCurrency(surcharge);
+                    summarySubtotalEl.textContent = formatCurrency(subtotal);
+                } else {
+                    minimumSurchargeRowEl.classList.add('hidden');
+                    summarySubtotalEl.textContent = formatCurrency(subtotal);
+                }
+                
+                summaryTaxEl.textContent = formatCurrency(tax);
+                summaryTotalEl.textContent = formatCurrency(total);
+                
+                updateChart(chartLabels, chartData);
+            }
+
+            function createJobItem() {
+                const templateClone = jobItemTemplate.content.cloneNode(true);
+                const jobItemEl = templateClone.querySelector('.job-item');
+                const materialSelect = jobItemEl.querySelector('.job-material');
+
+                materials.forEach(material => {
+                    const option = document.createElement('option');
+                    option.value = material.price;
+                    option.textContent = `${material.name} (${material.maxWidth}" max)`;
+                    if(material.price === 0) option.textContent = material.name;
+                    option.dataset.maxWidth = material.maxWidth;
+                    materialSelect.appendChild(option);
+                });
+
+                jobItemEl.addEventListener('input', updateAllCalculations);
+                jobItemEl.querySelector('.remove-job-btn').addEventListener('click', () => {
+                    jobItemEl.remove();
+                    updateAllCalculations();
+                });
+
+                jobItemsContainer.appendChild(jobItemEl);
+            }
+
+            function collectAllData() {
+                const contactInfo = {
+                    name: document.getElementById('contact-name').value,
+                    email: document.getElementById('contact-email').value,
+                    phone: document.getElementById('contact-phone').value,
+                };
+
+                const jobItemsData = [];
+                const jobItems = jobItemsContainer.querySelectorAll('.job-item');
+                
+                let currentSubtotal = 0;
+
+                jobItems.forEach((item, index) => {
+                    const width = parseFloat(item.querySelector('.job-width').value) || 0;
+                    const height = parseFloat(item.querySelector('.job-height').value) || 0;
+                    const quantity = parseInt(item.querySelector('.job-quantity').value) || 0;
+                    const materialSelect = item.querySelector('.job-material');
+                    const pricePerSqFt = parseFloat(materialSelect.value) || 0;
+                    const materialName = getMaterialName(pricePerSqFt);
+                    const description = item.querySelector('.job-description').value.trim() || `Job #${index + 1}`;
+                    const file = item.querySelector('.job-file-name').value.trim() || 'N/A';
+                    
+                    const sqInches = width * height;
+                    const sqFeet = sqInches / 144;
+                    const itemTotal = sqFeet * pricePerSqFt * quantity;
+                    currentSubtotal += itemTotal;
+
+                    jobItemsData.push({
+                        description: description,
+                        file: file,
+                        width: width,
+                        height: height,
+                        quantity: quantity,
+                        material: materialName,
+                        pricePerSqFt: pricePerSqFt.toFixed(2),
+                        sqFeet: sqFeet.toFixed(2),
+                        itemTotal: itemTotal.toFixed(2)
+                    });
+                });
+
+                const rawSubtotal = currentSubtotal;
+                
+                let surcharge = 0;
+                if (rawSubtotal < MINIMUM_ORDER && rawSubtotal > 0) {
+                    surcharge = MINIMUM_ORDER - rawSubtotal;
+                }
+                const effectiveSubtotal = rawSubtotal + surcharge;
+                const tax = effectiveSubtotal * TAX_RATE;
+                const total = effectiveSubtotal + tax;
+
+                return {
+                    contact: contactInfo,
+                    jobs: jobItemsData,
+                    summary: {
+                        rawSubtotal: rawSubtotal.toFixed(2),
+                        surcharge: surcharge.toFixed(2),
+                        subtotal: effectiveSubtotal.toFixed(2),
+                        tax: tax.toFixed(2),
+                        total: total.toFixed(2)
+                    }
+                };
+            }
+
+            function generatePrintableHTML(data) {
+                let jobDetails = data.jobs.filter(j => parseFloat(j.itemTotal) > 0).map((job, index) => `
+                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background-color: #ffffff;">
+                        <p style="font-weight: bold; margin-bottom: 0.5rem; font-size: 1.125rem;">JOB ${index + 1}: ${job.description}</p>
+                        <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 50%; padding: 0.25rem;"><span style="font-weight: 500;">File Name:</span> ${job.file}</td>
+                                <td style="width: 50%; padding: 0.25rem;"><span style="font-weight: 500;">Material:</span> ${job.material}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Dimensions:</span> ${job.width}W x ${job.height}H in</td>
+                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Price/Sq.Ft:</span> $${job.pricePerSqFt}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Quantity:</span> ${job.quantity}</td>
+                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Total Sq. Ft.:</span> ${job.sqFeet}</td>
+                            </tr>
+                             <tr>
+                                <td colspan="2" style="text-align: right; font-weight: bold; font-size: 1.25rem; color: #4f46e5; padding-top: 0.5rem;">Cost: $${job.itemTotal}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `).join('');
+                
+                if (data.jobs.filter(j => parseFloat(j.itemTotal) > 0).length === 0) {
+                     jobDetails = '<p style="color: #64748b;">No active print jobs calculated.</p>';
+                }
+
+
+                let surchargeHtml = '';
+                if (parseFloat(data.summary.surcharge) > 0) {
+                    surchargeHtml = `
+                    <div style="display: flex; justify-content: space-between; color: #ea580c; font-weight: 600;">
+                        <span>Minimum Order Surcharge ($${MINIMUM_ORDER.toFixed(2)}):</span>
+                        <span>$${data.summary.surcharge}</span>
+                    </div>
+                    `;
+                }
+
+                let html = `
+                    <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+                        <h1 style="font-size: 1.875rem; font-weight: bold; margin-bottom: 0.25rem; text-align: center; color: #1e293b;">WIDE FORMAT PRINTING ORDER (UPS STORE #4066)</h1>
+                        <p style="font-size: 1rem; color: #475569; margin-bottom: 2rem; text-align: center;">Customer: Westmont High School | Generated on: ${new Date().toLocaleString()}</p>
+                        
+                        <div style="margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background-color: #f8fafc;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; border-bottom: 1px solid #c7d2fe; padding-bottom: 0.5rem; color: #4338ca;">CONTACT INFORMATION</h2>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500;">Contact Name:</span> ${data.contact.name || 'N/A'}</td>
+                                    <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500;">Email:</span> ${data.contact.email || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding: 0.25rem;"><span style="font-weight: 500;">Phone:</span> ${data.contact.phone || 'N/A'}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-bottom: 2rem;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; border-bottom: 1px solid #c7d2fe; padding-bottom: 0.5rem; color: #4338ca;">JOB DETAILS</h2>
+                            ${jobDetails}
+                        </div>
+
+                        <div style="border: 3px solid #4f46e5; padding: 1.5rem; border-radius: 0.75rem; background-color: #eef2ff;">
+                            <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; color: #3730a3;">TOTAL COST SUMMARY</h2>
+                            <div style="font-size: 1.125rem; line-height: 1.75rem;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Raw Subtotal (Job Cost):</span>
+                                    <span>$${data.summary.rawSubtotal}</span>
+                                </div>
+                                ${surchargeHtml}
+                                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c7d2fe; padding-top: 0.5rem;">
+                                    <span>Adjusted Subtotal (Pre-Tax):</span>
+                                    <span>$${data.summary.subtotal}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Tax (9.375%):</span>
+                                    <span>$${data.summary.tax}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.5rem; border-top: 4px double #4f46e5; padding-top: 0.75rem; color: #3730a3;">
+                                    <span>TOTAL DUE:</span>
+                                    <span>$${data.summary.total}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return html;
+            }
+
+            function showModal(title, message) {
+                document.getElementById('modal-title').textContent = title;
+                document.getElementById('modal-message').textContent = message;
+                modalEl.classList.remove('hidden');
+            }
+
+            function handleSubmission() {
+                const orderData = collectAllData();
+                const printableContent = generatePrintableHTML(orderData);
+
+                printableArea.innerHTML = printableContent;
+                
+                // Hide main app content and show the printable area
+                mainApp.classList.add('hidden');
+                printableArea.classList.remove('hidden');
+
+                // Use a short delay to ensure rendering before printing
+                setTimeout(() => {
+                    window.print();
+                    
+                    // After print dialog is triggered, restore the view
+                    // Set a longer timeout for the modal to be visible after print dialog interaction starts
+                    setTimeout(() => {
+                        mainApp.classList.remove('hidden');
+                        printableArea.classList.add('hidden');
+                        showModal(`Order PDF Generation Started`, `Please use your browser's print dialog and select **"Save as PDF"** as the destination to generate and save your final order file for submission.`);
+                    }, 500); 
+
+                }, 100); 
+            }
+
+            addJobBtn.addEventListener('click', createJobItem);
+            submitBtn.addEventListener('click', handleSubmission);
+            closeBtn.addEventListener('click', () => { modalEl.classList.add('hidden'); });
+            
+            createJobItem();
+        });
+    </script>
+</body>
+</html>
