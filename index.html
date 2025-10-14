@@ -75,19 +75,23 @@
     <div id="main-app" class="container mx-auto p-4 sm:p-6 lg:p-8 main-app">
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-slate-900">Wide Format Printing Calculator</h1>
-            <p class="text-lg text-slate-600 mt-2"></p>
+            <p class="text-lg text-slate-600 mt-2">For The UPS Store #4066 | Customer: Westmont High School</p>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
             <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold text-slate-900">Build Your Order</h2>
                     <button id="add-job-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-300 flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                         Add Job
                     </button>
                 </div>
+                <!-- Margin Note -->
+                <p class="text-xs text-red-600 font-medium mb-4 p-2 bg-red-50 rounded-lg border border-red-200">
+                    Note: A 5mm margin (approx 0.2 inches) will be automatically added to all print jobs for trimming/handling purposes. Image may be scaled down to fit these requirements if needed
+                </p>
                 <div id="job-items-container" class="space-y-6">
                 </div>
             </div>
@@ -101,9 +105,12 @@
                     </div>
                     <div class="space-y-3 text-lg">
                         <div class="flex justify-between font-medium">
-                            <span>Subtotal (Job Cost):</span>
+                            <span>Raw Subtotal (Job Cost):</span>
                             <span id="summary-subtotal">$0.00</span>
                         </div>
+                        
+                        <!-- Discount Rows Removed -->
+                        
                         <div id="minimum-surcharge-row" class="flex justify-between text-orange-600 font-semibold hidden">
                             <span>Minimum Order Surcharge ($15.00):</span>
                             <span id="summary-surcharge">$0.00</span>
@@ -121,7 +128,7 @@
                 </div>
                  <div class="bg-white p-6 rounded-2xl shadow-lg">
                     <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">Reference Prices</h2>
-                     <p class="text-sm text-slate-500 mb-4 text-center">Here are the pre-approved prices. Select from these materials in each job card to calculate costs automatically.</p>
+                     <p class="text-sm text-slate-500 mb-4 text-center">Here are the pre-approved prices for Westmont High School. Select from these materials in each job card to calculate costs automatically.</p>
                      <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead>
@@ -134,7 +141,7 @@
                             <tbody>
                                 <tr class="border-b"><td class="p-2">Matte Photo Paper</td><td class="p-2">44"</td><td class="p-2">$2.50</td></tr>
                                 <tr class="border-b"><td class="p-2">46# Bond</td><td class="p-2">36"</td><td class="p-2">$2.30</td></tr>
-                                <tr><td class="p-2">32# Bond</td><td class="p-2">36"</td><td class="p-2">$2.00</td></tr>
+                                <tr><td class="p-2">20# Bond</td><td class="p-2">36"</td><td class="p-2">$2.00</td></tr>
                             </tbody>
                         </table>
                      </div>
@@ -143,11 +150,52 @@
         </main>
         
         <footer class="bg-white p-6 rounded-2xl shadow-lg mt-8">
-            <h2 class="text-2xl font-bold text-slate-900 mb-6">Contact & File Information</h2>
+            <!-- TITLE: Contact Information -->
+            <h2 class="text-2xl font-bold text-slate-900 mb-4">Contact Information</h2>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div><label for="contact-name" class="block text-sm font-medium text-slate-700 mb-1">Department/Contact Name</label><input type="text" id="contact-name" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
                 <div><label for="contact-email" class="block text-sm font-medium text-slate-700 mb-1">Contact Email</label><input type="email" id="contact-email" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
                 <div><label for="contact-phone" class="block text-sm font-medium text-slate-700 mb-1">Contact Phone</label><input type="tel" id="contact-phone" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
+                
+                <!-- DESIRED COMPLETION DATE FIELD -->
+                <div><label for="completion-date" class="block text-sm font-medium text-slate-700 mb-1">Desired Completion Date</label><input type="date" id="completion-date" class="w-full p-2 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
+                
+                <!-- PAYMENT METHOD SECTION -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Payment Method</label>
+                    <div class="flex space-x-4 p-2 border border-slate-300 rounded-md bg-slate-50">
+                        <!-- CHANGED TO CARD ON FILE -->
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="payment-method" id="payment-card" value="Card on File" class="text-indigo-600 focus:ring-indigo-500" checked>
+                            <span class="ml-2 text-slate-700">Card on File</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="payment-method" id="payment-cash" value="Cash" class="text-indigo-600 focus:ring-indigo-500">
+                            <span class="ml-2 text-slate-700">Cash</span>
+                        </label>
+                    </div>
+                    <!-- NEW CASH PAYMENT NOTE -->
+                    <p class="text-xs text-orange-600 font-medium mt-2">
+                        Note: Cash payments require funds to be collected before printing production can begin.
+                    </p>
+                </div>
+                
+                <!-- DELIVERY METHOD SECTION -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Delivery Method</label>
+                    <div class="flex space-x-6 p-2 border border-slate-300 rounded-md bg-slate-50">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delivery-method" id="delivery-pickup" value="Store Pickup" class="text-green-600 focus:ring-green-500" checked>
+                            <span class="ml-2 text-slate-700">Store Pickup</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delivery-method" id="delivery-dropoff" value="School Drop-off" class="text-green-600 focus:ring-green-500">
+                            <span class="ml-2 text-slate-700">School Drop-off</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="md:col-span-2 text-right"><button id="submit-order-btn" class="bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-300">Generate PDF</button></div>
             </div>
         </footer>
@@ -165,7 +213,7 @@
             <p id="modal-message" class="text-slate-700 mb-6"></p>
             <button id="modal-close-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Close</button>
         </div>
-    </div>
+    </divu>
 
     <template id="job-item-template">
         <div class="job-item border border-slate-200 p-4 rounded-xl">
@@ -188,10 +236,13 @@
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Dimensions (W x H inches)</label>
                     <div class="flex items-center">
-                        <input type="number" class="job-width w-1/2 p-2 border border-slate-300 rounded-l-md" placeholder="W" min="1">
+                        <input type="number" class="job-width w-1/2 p-2 border border-slate-300 rounded-l-md" placeholder="W" min="12">
                         <span class="p-2 border-y border-slate-300 bg-slate-50">x</span>
-                        <input type="number" class="job-height w-1/2 p-2 border border-slate-300 rounded-r-md" placeholder="H" min="1">
+                        <input type="number" class="job-height w-1/2 p-2 border border-slate-300 rounded-r-md" placeholder="H" min="12" max="120">
                     </div>
+                     <!-- Warning Elements -->
+                    <p class="width-warning text-xs text-red-500 mt-1 hidden"></p>
+                    <p class="height-warning text-xs text-red-500 mt-1 hidden"></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
@@ -230,10 +281,12 @@
                 { name: 'Select a material...', price: 0, maxWidth: Infinity },
                 { name: 'Matte Photo Paper', price: 2.50, maxWidth: 44 },
                 { name: '46# Bond', price: 2.30, maxWidth: 36 },
-                { name: '32# Bond', price: 2.00, maxWidth: 36 }
+                { name: '20# Bond', price: 2.00, maxWidth: 36 }
             ];
             const TAX_RATE = 0.09375;
             const MINIMUM_ORDER = 15.00;
+            const MIN_DIMENSION = 12; // Minimum size is 12x12 inches
+            const MAX_HEIGHT_LIMIT = 120;
             let jobUniqueIdCounter = 0;
 
             const mainApp = document.getElementById('main-app');
@@ -246,6 +299,7 @@
             const jobItemTemplate = document.getElementById('job-item-template');
             
             const summarySubtotalEl = document.getElementById('summary-subtotal');
+            
             const summarySurchargeEl = document.getElementById('summary-surcharge');
             const minimumSurchargeRowEl = document.getElementById('minimum-surcharge-row');
             const summaryTaxEl = document.getElementById('summary-tax');
@@ -316,24 +370,73 @@
             function updateAllCalculations() {
                 const jobItems = jobItemsContainer.querySelectorAll('.job-item');
                 let subtotal = 0;
+                let totalQuantity = 0;
                 
                 const chartLabels = [];
                 const chartData = [];
 
                 jobItems.forEach((item, index) => {
-                    const width = parseFloat(item.querySelector('.job-width').value) || 0;
-                    const height = parseFloat(item.querySelector('.job-height').value) || 0;
+                    let currentWidth = parseFloat(item.querySelector('.job-width').value) || 0;
+                    let currentHeight = parseFloat(item.querySelector('.job-height').value) || 0;
                     const quantity = parseInt(item.querySelector('.job-quantity').value) || 0;
                     const materialSelect = item.querySelector('.job-material');
                     const pricePerSqFt = parseFloat(materialSelect.value) || 0;
                     const description = item.querySelector('.job-description').value.trim() || `Job #${index + 1}`;
+                    
+                    const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+                    const maxWidth = parseFloat(selectedOption.dataset.maxWidth) || Infinity;
+                    
+                    const widthInput = item.querySelector('.job-width');
+                    const heightInput = item.querySelector('.job-height');
+                    
+                    const widthWarningEl = item.querySelector('.width-warning');
+                    const heightWarningEl = item.querySelector('.height-warning');
+                    
+                    // 1. Max/Min Width Enforcement Logic 
+                    if (currentWidth > maxWidth) {
+                        widthInput.value = maxWidth;
+                        widthInput.classList.add('border-red-500', 'ring-red-500');
+                        widthWarningEl.textContent = `Warning: Max width for ${selectedOption.textContent.split('(')[0].trim()} is ${maxWidth} inches.`;
+                        widthWarningEl.classList.remove('hidden');
+                        currentWidth = maxWidth;
+                    } else if (currentWidth < MIN_DIMENSION && currentWidth > 0) {
+                        widthInput.value = MIN_DIMENSION;
+                        widthInput.classList.add('border-red-500', 'ring-red-500');
+                        widthWarningEl.textContent = `Warning: Minimum width is ${MIN_DIMENSION} inches.`;
+                        widthWarningEl.classList.remove('hidden');
+                        currentWidth = MIN_DIMENSION;
+                    } else {
+                        widthInput.classList.remove('border-red-500', 'ring-red-500');
+                        widthWarningEl.classList.add('hidden');
+                        widthWarningEl.textContent = '';
+                    }
+                    
+                    // 2. Max/Min Height Enforcement Logic
+                    if (currentHeight > MAX_HEIGHT_LIMIT) {
+                        heightInput.value = MAX_HEIGHT_LIMIT;
+                        heightInput.classList.add('border-red-500', 'ring-red-500');
+                        heightWarningEl.textContent = `Warning: Max height allowed is ${MAX_HEIGHT_LIMIT} inches.`;
+                        heightWarningEl.classList.remove('hidden');
+                        currentHeight = MAX_HEIGHT_LIMIT;
+                    } else if (currentHeight < MIN_DIMENSION && currentHeight > 0) {
+                        heightInput.value = MIN_DIMENSION;
+                        heightInput.classList.add('border-red-500', 'ring-red-500');
+                        heightWarningEl.textContent = `Warning: Minimum height is ${MIN_DIMENSION} inches.`;
+                        heightWarningEl.classList.remove('hidden');
+                        currentHeight = MIN_DIMENSION;
+                    } else {
+                        heightInput.classList.remove('border-red-500', 'ring-red-500');
+                        heightWarningEl.classList.add('hidden');
+                        heightWarningEl.textContent = '';
+                    }
 
-                    const sqInches = width * height;
+                    const sqInches = currentWidth * currentHeight;
                     const sqFeet = sqInches / 144;
                     const itemTotal = sqFeet * pricePerSqFt * quantity;
 
                     item.querySelector('.item-total').textContent = formatCurrency(itemTotal);
                     subtotal += itemTotal;
+                    totalQuantity += quantity;
                     
                     if (itemTotal > 0) {
                         chartLabels.push(description);
@@ -341,23 +444,30 @@
                     }
                 });
                 
+                // 3. Discount Calculation Logic REMOVED.
+                const rawSubtotal = subtotal;
+                const totalDiscountAmount = 0; 
+                
+                const subtotalAfterDiscount = rawSubtotal; 
+
+                // 4. Minimum Order Surcharge Calculation
                 let surcharge = 0;
-                if (subtotal < MINIMUM_ORDER && subtotal > 0) {
-                    surcharge = MINIMUM_ORDER - subtotal;
+                if (subtotalAfterDiscount < MINIMUM_ORDER && subtotalAfterDiscount > 0) {
+                    surcharge = MINIMUM_ORDER - subtotalAfterDiscount;
                 }
 
-                const effectiveSubtotal = subtotal + surcharge;
+                const effectiveSubtotal = subtotalAfterDiscount + surcharge;
                 const tax = effectiveSubtotal * TAX_RATE;
                 const total = effectiveSubtotal + tax;
 
                 // Update Display
+                summarySubtotalEl.textContent = formatCurrency(rawSubtotal);
+                
                 if (surcharge > 0) {
                     minimumSurchargeRowEl.classList.remove('hidden');
                     summarySurchargeEl.textContent = formatCurrency(surcharge);
-                    summarySubtotalEl.textContent = formatCurrency(subtotal);
                 } else {
                     minimumSurchargeRowEl.classList.add('hidden');
-                    summarySubtotalEl.textContent = formatCurrency(subtotal);
                 }
                 
                 summaryTaxEl.textContent = formatCurrency(tax);
@@ -371,7 +481,6 @@
                 const jobItemEl = templateClone.querySelector('.job-item');
                 const materialSelect = jobItemEl.querySelector('.job-material');
                 
-                // Assign unique name to the orientation radio group
                 const orientationGroupName = `orientation-group-${jobUniqueIdCounter++}`;
                 jobItemEl.querySelectorAll('.job-orientation-radio').forEach(radio => {
                     radio.name = orientationGroupName;
@@ -400,16 +509,20 @@
                     name: document.getElementById('contact-name').value,
                     email: document.getElementById('contact-email').value,
                     phone: document.getElementById('contact-phone').value,
+                    completionDate: document.getElementById('completion-date').value || 'N/A', 
+                    payment: document.querySelector('input[name="payment-method"]:checked')?.value || 'N/A',
+                    delivery: document.querySelector('input[name="delivery-method"]:checked')?.value || 'N/A' 
                 };
 
                 const jobItemsData = [];
                 const jobItems = jobItemsContainer.querySelectorAll('.job-item');
                 
                 let currentSubtotal = 0;
+                let totalQuantity = 0;
 
                 jobItems.forEach((item, index) => {
-                    const width = parseFloat(item.querySelector('.job-width').value) || 0;
-                    const height = parseFloat(item.querySelector('.job-height').value) || 0;
+                    let currentWidth = parseFloat(item.querySelector('.job-width').value) || 0;
+                    let currentHeight = parseFloat(item.querySelector('.job-height').value) || 0; 
                     const quantity = parseInt(item.querySelector('.job-quantity').value) || 0;
                     const materialSelect = item.querySelector('.job-material');
                     const pricePerSqFt = parseFloat(materialSelect.value) || 0;
@@ -417,22 +530,39 @@
                     const description = item.querySelector('.job-description').value.trim() || `Job #${index + 1}`;
                     const file = item.querySelector('.job-file-name').value.trim() || 'N/A';
                     
-                    // Capture Orientation
+                    const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+                    const maxWidth = parseFloat(selectedOption.dataset.maxWidth) || Infinity;
+                    
+                    // Clamping width
+                    if (currentWidth > maxWidth) {
+                        currentWidth = maxWidth; 
+                    } else if (currentWidth < MIN_DIMENSION && currentWidth > 0) {
+                        currentWidth = MIN_DIMENSION;
+                    }
+                    
+                    // Clamping height
+                    if (currentHeight > MAX_HEIGHT_LIMIT) {
+                        currentHeight = MAX_HEIGHT_LIMIT;
+                    } else if (currentHeight < MIN_DIMENSION && currentHeight > 0) {
+                        currentHeight = MIN_DIMENSION;
+                    }
+                    
                     const orientation = item.querySelector('input[type="radio"]:checked')?.value || 'N/A';
                     
-                    const sqInches = width * height;
+                    const sqInches = currentWidth * currentHeight;
                     const sqFeet = sqInches / 144;
                     const itemTotal = sqFeet * pricePerSqFt * quantity;
                     currentSubtotal += itemTotal;
+                    totalQuantity += quantity;
 
                     jobItemsData.push({
                         description: description,
                         file: file,
-                        width: width,
-                        height: height,
+                        width: currentWidth, 
+                        height: currentHeight,
                         quantity: quantity,
                         material: materialName,
-                        orientation: orientation, // Added
+                        orientation: orientation,
                         pricePerSqFt: pricePerSqFt.toFixed(2),
                         sqFeet: sqFeet.toFixed(2),
                         itemTotal: itemTotal.toFixed(2)
@@ -441,11 +571,16 @@
 
                 const rawSubtotal = currentSubtotal;
                 
+                // Discount logic removed
+                const totalDiscountAmount = 0;
+                const subtotalAfterDiscount = rawSubtotal;
+                
                 let surcharge = 0;
-                if (rawSubtotal < MINIMUM_ORDER && rawSubtotal > 0) {
-                    surcharge = MINIMUM_ORDER - rawSubtotal;
+                if (subtotalAfterDiscount < MINIMUM_ORDER && subtotalAfterDiscount > 0) {
+                    surcharge = MINIMUM_ORDER - subtotalAfterDiscount;
                 }
-                const effectiveSubtotal = rawSubtotal + surcharge;
+                
+                const effectiveSubtotal = subtotalAfterDiscount + surcharge;
                 const tax = effectiveSubtotal * TAX_RATE;
                 const total = effectiveSubtotal + tax;
 
@@ -454,10 +589,12 @@
                     jobs: jobItemsData,
                     summary: {
                         rawSubtotal: rawSubtotal.toFixed(2),
+                        discountAmount: totalDiscountAmount.toFixed(2),
                         surcharge: surcharge.toFixed(2),
                         subtotal: effectiveSubtotal.toFixed(2),
                         tax: tax.toFixed(2),
-                        total: total.toFixed(2)
+                        total: total.toFixed(2),
+                        totalQuantity: totalQuantity
                     }
                 };
             }
@@ -491,6 +628,7 @@
                      jobDetails = '<p style="color: #64748b;">No active print jobs calculated.</p>';
                 }
 
+                let discountHtml = ''; // No discount HTML is generated
 
                 let surchargeHtml = '';
                 if (parseFloat(data.summary.surcharge) > 0) {
@@ -502,22 +640,38 @@
                     `;
                 }
 
+                const subtotalAfterDiscount = data.summary.rawSubtotal; // Raw subtotal = Subtotal After Discount
+
                 let html = `
                     <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-                        <h1 style="font-size: 1.875rem; font-weight: bold; margin-bottom: 0.25rem; text-align: center; color: #1e293b;">WIDE FORMAT PRINTING ORDER</h1>
-                        <p style="font-size: 1rem; color: #475569; margin-bottom: 2rem; text-align: center;">Generated on: ${new Date().toLocaleString()}</p>
+                        <h1 style="font-size: 1.875rem; font-weight: bold; margin-bottom: 0.25rem; text-align: center; color: #1e293b;">WIDE FORMAT PRINTING ORDER (UPS STORE #4066)</h1>
+                        <p style="font-size: 1rem; color: #475569; margin-bottom: 2rem; text-align: center;">Customer: Westmont High School | Total Prints: ${data.summary.totalQuantity} | Generated on: ${new Date().toLocaleString()}</p>
                         
                         <div style="margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background-color: #f8fafc;">
-                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; border-bottom: 1px solid #c7d2fe; padding-bottom: 0.5rem; color: #4338ca;">CONTACT INFORMATION</h2>
-                            <table style="width: 100%; border-collapse: collapse;">
+                            <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; border-bottom: 1px solid #c7d2fe; padding-bottom: 0.5rem; color: #4338ca;">CONTACT & ORDER INFORMATION</h2>
+                            
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 0.75rem;">
                                 <tr>
                                     <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500;">Contact Name:</span> ${data.contact.name || 'N/A'}</td>
                                     <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500;">Email:</span> ${data.contact.email || 'N/A'}</td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2" style="padding: 0.25rem;"><span style="font-weight: 500;">Phone:</span> ${data.contact.phone || 'N/A'}</td>
+                                    <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500;">Phone:</span> ${data.contact.phone || 'N/A'}</td>
+                                    <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500;">Payment Method:</span> ${data.contact.payment}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500; color: #059669;">Delivery Method:</span> ${data.contact.delivery}</td>
+                                    <td style="padding: 0.25rem; width: 50%;"><span style="font-weight: 500; color: #059669;">Desired Completion Date:</span> ${data.contact.completionDate}</td>
                                 </tr>
                             </table>
+                            <!-- PAYMENT NOTE FOR PDF -->
+                            <p style="font-size: 0.8rem; color: #ea580c; margin-top: 0.5rem; font-weight: 500;">
+                                Note: Cash payments require funds to be collected before printing production can begin.
+                            </p>
+                            <!-- MARGIN NOTE FOR PDF -->
+                            <p style="font-size: 0.8rem; color: #b91c1c; margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid #fecaca; font-weight: 500;">
+                                NOTE: A 5mm margin (approx 0.2 inches) will be automatically added to all print jobs for trimming/handling purposes. Image may be scaled down to fit these requirements if needed
+                            </p>
                         </div>
 
                         <div style="margin-bottom: 2rem;">
@@ -532,9 +686,14 @@
                                     <span>Raw Subtotal (Job Cost):</span>
                                     <span>$${data.summary.rawSubtotal}</span>
                                 </div>
+                                ${discountHtml}
+                                <div style="display: flex; justify-content: space-between; border-top: ${parseFloat(data.summary.discountAmount) > 0 ? '1px solid #c7d2fe; padding-top: 0.5rem;' : 'none;' }">
+                                    <span>Subtotal After Discount:</span>
+                                    <span>$${subtotalAfterDiscount}</span>
+                                </div>
                                 ${surchargeHtml}
-                                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c7d2fe; padding-top: 0.5rem;">
-                                    <span>Adjusted Subtotal (Pre-Tax):</span>
+                                <div style="display: flex; justify-content: space-between; border-top: ${surchargeHtml ? '1px solid #c7d2fe; padding-top: 0.5rem;' : 'none;' }">
+                                    <span>Taxable Subtotal (Pre-Tax):</span>
                                     <span>$${data.summary.subtotal}</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
