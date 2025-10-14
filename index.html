@@ -203,6 +203,21 @@
                     </select>
                 </div>
             </div>
+            
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Orientation</label>
+                <div class="flex space-x-6">
+                    <label class="inline-flex items-center">
+                        <input type="radio" class="job-orientation-radio text-indigo-600 focus:ring-indigo-500" name="orientation-group" value="Portrait" checked>
+                        <span class="ml-2 text-slate-700">Portrait</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" class="job-orientation-radio text-indigo-600 focus:ring-indigo-500" name="orientation-group" value="Landscape">
+                        <span class="ml-2 text-slate-700">Landscape</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="mt-4 text-right">
                 <span class="text-xl font-bold text-indigo-600 item-total">$0.00</span>
             </div>
@@ -219,6 +234,7 @@
             ];
             const TAX_RATE = 0.09375;
             const MINIMUM_ORDER = 15.00;
+            let jobUniqueIdCounter = 0;
 
             const mainApp = document.getElementById('main-app');
             const printableArea = document.getElementById('printable-area');
@@ -354,6 +370,12 @@
                 const templateClone = jobItemTemplate.content.cloneNode(true);
                 const jobItemEl = templateClone.querySelector('.job-item');
                 const materialSelect = jobItemEl.querySelector('.job-material');
+                
+                // Assign unique name to the orientation radio group
+                const orientationGroupName = `orientation-group-${jobUniqueIdCounter++}`;
+                jobItemEl.querySelectorAll('.job-orientation-radio').forEach(radio => {
+                    radio.name = orientationGroupName;
+                });
 
                 materials.forEach(material => {
                     const option = document.createElement('option');
@@ -395,6 +417,9 @@
                     const description = item.querySelector('.job-description').value.trim() || `Job #${index + 1}`;
                     const file = item.querySelector('.job-file-name').value.trim() || 'N/A';
                     
+                    // Capture Orientation
+                    const orientation = item.querySelector('input[type="radio"]:checked')?.value || 'N/A';
+                    
                     const sqInches = width * height;
                     const sqFeet = sqInches / 144;
                     const itemTotal = sqFeet * pricePerSqFt * quantity;
@@ -407,6 +432,7 @@
                         height: height,
                         quantity: quantity,
                         material: materialName,
+                        orientation: orientation, // Added
                         pricePerSqFt: pricePerSqFt.toFixed(2),
                         sqFeet: sqFeet.toFixed(2),
                         itemTotal: itemTotal.toFixed(2)
@@ -451,10 +477,11 @@
                             </tr>
                             <tr>
                                 <td style="padding: 0.25rem;"><span style="font-weight: 500;">Quantity:</span> ${job.quantity}</td>
-                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Total Sq. Ft.:</span> ${job.sqFeet}</td>
+                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Orientation:</span> ${job.orientation}</td> 
                             </tr>
-                             <tr>
-                                <td colspan="2" style="text-align: right; font-weight: bold; font-size: 1.25rem; color: #4f46e5; padding-top: 0.5rem;">Cost: $${job.itemTotal}</td>
+                            <tr>
+                                <td style="padding: 0.25rem;"><span style="font-weight: 500;">Total Sq. Ft.:</span> ${job.sqFeet}</td>
+                                <td colspan="1" style="text-align: right; font-weight: bold; font-size: 1.25rem; color: #4f46e5; padding-top: 0.5rem;">Cost: $${job.itemTotal}</td>
                             </tr>
                         </table>
                     </div>
