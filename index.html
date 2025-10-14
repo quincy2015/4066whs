@@ -602,7 +602,7 @@
 
             function generatePrintableHTML(data) {
                 let jobDetails = data.jobs.filter(j => parseFloat(j.itemTotal) > 0).map((job, index) => `
-                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background-color: #ffffff;">
+                    <div style="border: 1px solid #e2e8f0; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background-color: #ffffff; page-break-inside: avoid;">
                         <p style="font-weight: bold; margin-bottom: 0.5rem; font-size: 1.125rem;">JOB ${index + 1}: ${job.description}</p>
                         <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">
                             <tr>
@@ -648,7 +648,7 @@
                         <h1 style="font-size: 1.875rem; font-weight: bold; margin-bottom: 0.25rem; text-align: center; color: #1e293b;">WIDE FORMAT PRINTING ORDER</h1>
                         <p style="font-size: 1rem; color: #475569; margin-bottom: 2rem; text-align: center;">Customer: Westmont High School | Total Prints: ${data.summary.totalQuantity} | Generated on: ${new Date().toLocaleString()}</p>
                         
-                        <div style="margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background-color: #f8fafc;">
+                        <div style="margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background-color: #f8fafc; page-break-inside: avoid;">
                             <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; border-bottom: 1px solid #c7d2fe; padding-bottom: 0.5rem; color: #4338ca;">CONTACT & ORDER INFORMATION</h2>
                             
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 0.75rem;">
@@ -674,7 +674,7 @@
                             ${jobDetails}
                         </div>
 
-                        <div style="border: 3px solid #4f46e5; padding: 1.5rem; border-radius: 0.75rem; background-color: #eef2ff;">
+                        <div style="border: 3px solid #4f46e5; padding: 1.5rem; border-radius: 0.75rem; background-color: #eef2ff; page-break-inside: avoid;">
                             <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; color: #3730a3;">TOTAL COST SUMMARY</h2>
                             <div style="font-size: 1.125rem; line-height: 1.75rem;">
                                 <div style="display: flex; justify-content: space-between;">
