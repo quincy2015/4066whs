@@ -204,8 +204,8 @@
                         </label>
                          <label class="inline-flex items-center">
                             <!-- Fee $25.00 -->
-                            <input type="radio" name="delivery-method" id="delivery-special" value="Special Delivery" data-fee="25" class="delivery-radio text-green-600 focus:ring-green-500">
-                            <span class="ml-2 text-slate-700">Special Delivery (+$25.00)</span>
+                            <input type="radio" name="delivery-method" id="delivery-special" value="UPS Ground" data-fee="25" class="delivery-radio text-green-600 focus:ring-green-500">
+                            <span class="ml-2 text-slate-700">UPS Ground (+$25.00)</span>
                         </label>
                     </div>
                 </div>
@@ -466,15 +466,16 @@
                 const selectedDeliveryRadio = document.querySelector('input[name="delivery-method"]:checked');
                 const deliveryFee = parseFloat(selectedDeliveryRadio.dataset.fee) || 0;
                 
-                const subtotalPreSurcharge = rawSubtotal + deliveryFee;
+                // New consolidated calculation for cost before surcharge
+                const costBeforeSurcharge = rawSubtotal + deliveryFee;
 
                 // 4. Minimum Order Surcharge Calculation
                 let surcharge = 0;
-                if (subtotalPreSurcharge < MINIMUM_ORDER && subtotalPreSurcharge > 0) {
-                    surcharge = MINIMUM_ORDER - subtotalPreSurcharge;
+                if (costBeforeSurcharge < MINIMUM_ORDER && costBeforeSurcharge > 0) {
+                    surcharge = MINIMUM_ORDER - costBeforeSurcharge;
                 }
 
-                const effectiveSubtotal = subtotalPreSurcharge + surcharge;
+                const effectiveSubtotal = costBeforeSurcharge + surcharge;
                 const tax = effectiveSubtotal * TAX_RATE;
                 const total = effectiveSubtotal + tax;
 
@@ -603,16 +604,15 @@
                 const rawSubtotal = currentSubtotal;
                 
                 // Discount logic removed
-                const subtotalAfterDiscount = rawSubtotal;
                 
-                const subtotalPreSurcharge = subtotalAfterDiscount + deliveryFee;
+                const costBeforeSurcharge = rawSubtotal + deliveryFee;
 
                 let surcharge = 0;
-                if (subtotalPreSurcharge < MINIMUM_ORDER && subtotalPreSurcharge > 0) {
-                    surcharge = MINIMUM_ORDER - subtotalPreSurcharge;
+                if (costBeforeSurcharge < MINIMUM_ORDER && costBeforeSurcharge > 0) {
+                    surcharge = MINIMUM_ORDER - costBeforeSurcharge;
                 }
                 
-                const effectiveSubtotal = subtotalPreSurcharge + surcharge;
+                const effectiveSubtotal = costBeforeSurcharge + surcharge;
                 const tax = effectiveSubtotal * TAX_RATE;
                 const total = effectiveSubtotal + tax;
 
@@ -661,8 +661,18 @@
                 }
 
                 let deliveryFeeHtml = '';
+                // Since Raw Subtotal is removed, explicitly list Job Cost here for clarity
+                if (parseFloat(data.summary.rawSubtotal) > 0) {
+                    deliveryFeeHtml += `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Job Cost (Raw Subtotal):</span>
+                        <span>$${data.summary.rawSubtotal}</span>
+                    </div>
+                    `;
+                }
+                
                 if (parseFloat(data.summary.deliveryFee) > 0) {
-                    deliveryFeeHtml = `
+                    deliveryFeeHtml += `
                     <div style="display: flex; justify-content: space-between;">
                         <span>Delivery/Drop-off Fee:</span>
                         <span>$${data.summary.deliveryFee}</span>
@@ -679,8 +689,6 @@
                     </div>
                     `;
                 }
-
-                const subtotalPreSurcharge = (parseFloat(data.summary.rawSubtotal) + parseFloat(data.summary.deliveryFee)).toFixed(2);
 
                 let html = `
                     <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: 'Inter', sans-serif;">
@@ -716,17 +724,9 @@
                         <div style="border: 3px solid #4f46e5; padding: 1.5rem; border-radius: 0.75rem; background-color: #eef2ff; page-break-inside: avoid;">
                             <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; color: #3730a3;">TOTAL COST SUMMARY</h2>
                             <div style="font-size: 1.125rem; line-height: 1.75rem;">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Raw Subtotal (Job Cost):</span>
-                                    <span>$${data.summary.rawSubtotal}</span>
-                                </div>
                                 ${deliveryFeeHtml}
-                                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c7d2fe; padding-top: 0.5rem;">
-                                    <span>Subtotal Pre-Surcharge:</span>
-                                    <span>$${subtotalPreSurcharge}</span>
-                                </div>
                                 ${surchargeHtml}
-                                <div style="display: flex; justify-content: space-between; border-top: ${surchargeHtml ? '1px solid #c7d2fe; padding-top: 0.5rem;' : 'none;' }">
+                                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c7d2fe; padding-top: 0.5rem;">
                                     <span>Taxable Subtotal (Pre-Tax):</span>
                                     <span>$${data.summary.subtotal}</span>
                                 </div>
