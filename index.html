@@ -109,6 +109,12 @@
                             <span id="summary-subtotal">$0.00</span>
                         </div>
                         
+                        <!-- NEW DELIVERY FEE ROW -->
+                        <div id="delivery-fee-row" class="flex justify-between text-slate-600 font-medium hidden">
+                            <span>Delivery/Drop-off Fee:</span>
+                            <span id="summary-delivery-fee">$0.00</span>
+                        </div>
+                        
                         <!-- Discount Rows Removed -->
                         
                         <div id="minimum-surcharge-row" class="flex justify-between text-orange-600 font-semibold hidden">
@@ -187,12 +193,19 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">Delivery Method</label>
                     <div class="flex space-x-6 p-2 border border-slate-300 rounded-md bg-slate-50">
                         <label class="inline-flex items-center">
-                            <input type="radio" name="delivery-method" id="delivery-pickup" value="Store Pickup" class="text-green-600 focus:ring-green-500" checked>
-                            <span class="ml-2 text-slate-700">Store Pickup</span>
+                            <!-- Fee $0.00 -->
+                            <input type="radio" name="delivery-method" id="delivery-pickup" value="Store Pickup" data-fee="0" class="delivery-radio text-green-600 focus:ring-green-500" checked>
+                            <span class="ml-2 text-slate-700">Store Pickup (No Fee)</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="radio" name="delivery-method" id="delivery-dropoff" value="School Drop-off" class="text-green-600 focus:ring-green-500">
-                            <span class="ml-2 text-slate-700">School Drop-off</span>
+                            <!-- Fee $0.75 -->
+                            <input type="radio" name="delivery-method" id="delivery-dropoff" value="School Drop-off" data-fee="0.75" class="delivery-radio text-green-600 focus:ring-green-500">
+                            <span class="ml-2 text-slate-700">School Drop-off (+$0.75)</span>
+                        </label>
+                         <label class="inline-flex items-center">
+                            <!-- Fee $25.00 -->
+                            <input type="radio" name="delivery-method" id="delivery-special" value="Special Delivery" data-fee="25" class="delivery-radio text-green-600 focus:ring-green-500">
+                            <span class="ml-2 text-slate-700">Special Delivery (+$25.00)</span>
                         </label>
                     </div>
                 </div>
@@ -300,6 +313,8 @@
             const jobItemTemplate = document.getElementById('job-item-template');
             
             const summarySubtotalEl = document.getElementById('summary-subtotal');
+            const summaryDeliveryFeeEl = document.getElementById('summary-delivery-fee');
+            const deliveryFeeRowEl = document.getElementById('delivery-fee-row');
             
             const summarySurchargeEl = document.getElementById('summary-surcharge');
             const minimumSurchargeRowEl = document.getElementById('minimum-surcharge-row');
@@ -445,25 +460,36 @@
                     }
                 });
                 
-                // 3. Discount Calculation Logic REMOVED.
                 const rawSubtotal = subtotal;
-                const totalDiscountAmount = 0; 
                 
-                const subtotalAfterDiscount = rawSubtotal; 
+                // 3. Apply Delivery Fee
+                const selectedDeliveryRadio = document.querySelector('input[name="delivery-method"]:checked');
+                const deliveryFee = parseFloat(selectedDeliveryRadio.dataset.fee) || 0;
+                
+                const subtotalPreSurcharge = rawSubtotal + deliveryFee;
 
                 // 4. Minimum Order Surcharge Calculation
                 let surcharge = 0;
-                if (subtotalAfterDiscount < MINIMUM_ORDER && subtotalAfterDiscount > 0) {
-                    surcharge = MINIMUM_ORDER - subtotalAfterDiscount;
+                if (subtotalPreSurcharge < MINIMUM_ORDER && subtotalPreSurcharge > 0) {
+                    surcharge = MINIMUM_ORDER - subtotalPreSurcharge;
                 }
 
-                const effectiveSubtotal = subtotalAfterDiscount + surcharge;
+                const effectiveSubtotal = subtotalPreSurcharge + surcharge;
                 const tax = effectiveSubtotal * TAX_RATE;
                 const total = effectiveSubtotal + tax;
 
                 // Update Display
                 summarySubtotalEl.textContent = formatCurrency(rawSubtotal);
                 
+                // Update Delivery Fee Display
+                if (deliveryFee > 0) {
+                    deliveryFeeRowEl.classList.remove('hidden');
+                    summaryDeliveryFeeEl.textContent = formatCurrency(deliveryFee);
+                } else {
+                    deliveryFeeRowEl.classList.add('hidden');
+                }
+                
+                // Update Surcharge Display
                 if (surcharge > 0) {
                     minimumSurchargeRowEl.classList.remove('hidden');
                     summarySurchargeEl.textContent = formatCurrency(surcharge);
@@ -506,13 +532,17 @@
             }
 
             function collectAllData() {
+                const selectedDeliveryRadio = document.querySelector('input[name="delivery-method"]:checked');
+                const deliveryFee = parseFloat(selectedDeliveryRadio.dataset.fee) || 0;
+                const deliveryMethod = selectedDeliveryRadio.value;
+
                 const contactInfo = {
                     name: document.getElementById('contact-name').value,
                     email: document.getElementById('contact-email').value,
                     phone: document.getElementById('contact-phone').value,
                     completionDate: document.getElementById('completion-date').value || 'N/A', 
                     payment: document.querySelector('input[name="payment-method"]:checked')?.value || 'N/A',
-                    delivery: document.querySelector('input[name="delivery-method"]:checked')?.value || 'N/A' 
+                    delivery: `${deliveryMethod} ($${deliveryFee.toFixed(2)} Fee)`
                 };
 
                 const jobItemsData = [];
@@ -573,15 +603,16 @@
                 const rawSubtotal = currentSubtotal;
                 
                 // Discount logic removed
-                const totalDiscountAmount = 0;
                 const subtotalAfterDiscount = rawSubtotal;
                 
+                const subtotalPreSurcharge = subtotalAfterDiscount + deliveryFee;
+
                 let surcharge = 0;
-                if (subtotalAfterDiscount < MINIMUM_ORDER && subtotalAfterDiscount > 0) {
-                    surcharge = MINIMUM_ORDER - subtotalAfterDiscount;
+                if (subtotalPreSurcharge < MINIMUM_ORDER && subtotalPreSurcharge > 0) {
+                    surcharge = MINIMUM_ORDER - subtotalPreSurcharge;
                 }
                 
-                const effectiveSubtotal = subtotalAfterDiscount + surcharge;
+                const effectiveSubtotal = subtotalPreSurcharge + surcharge;
                 const tax = effectiveSubtotal * TAX_RATE;
                 const total = effectiveSubtotal + tax;
 
@@ -590,9 +621,9 @@
                     jobs: jobItemsData,
                     summary: {
                         rawSubtotal: rawSubtotal.toFixed(2),
-                        discountAmount: totalDiscountAmount.toFixed(2),
+                        deliveryFee: deliveryFee.toFixed(2),
                         surcharge: surcharge.toFixed(2),
-                        subtotal: effectiveSubtotal.toFixed(2),
+                        subtotal: effectiveSubtotal.toFixed(2), // Taxable subtotal
                         tax: tax.toFixed(2),
                         total: total.toFixed(2),
                         totalQuantity: totalQuantity
@@ -629,8 +660,16 @@
                      jobDetails = '<p style="color: #64748b;">No active print jobs calculated.</p>';
                 }
 
-                let discountHtml = ''; // No discount HTML is generated
-
+                let deliveryFeeHtml = '';
+                if (parseFloat(data.summary.deliveryFee) > 0) {
+                    deliveryFeeHtml = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Delivery/Drop-off Fee:</span>
+                        <span>$${data.summary.deliveryFee}</span>
+                    </div>
+                    `;
+                }
+                
                 let surchargeHtml = '';
                 if (parseFloat(data.summary.surcharge) > 0) {
                     surchargeHtml = `
@@ -641,7 +680,7 @@
                     `;
                 }
 
-                const subtotalAfterDiscount = data.summary.rawSubtotal; // Raw subtotal = Subtotal After Discount
+                const subtotalPreSurcharge = (parseFloat(data.summary.rawSubtotal) + parseFloat(data.summary.deliveryFee)).toFixed(2);
 
                 let html = `
                     <div style="padding: 2rem; max-width: 800px; margin: 0 auto; font-family: 'Inter', sans-serif;">
@@ -681,10 +720,10 @@
                                     <span>Raw Subtotal (Job Cost):</span>
                                     <span>$${data.summary.rawSubtotal}</span>
                                 </div>
-                                ${discountHtml}
-                                <div style="display: flex; justify-content: space-between; border-top: ${parseFloat(data.summary.discountAmount) > 0 ? '1px solid #c7d2fe; padding-top: 0.5rem;' : 'none;' }">
-                                    <span>Subtotal After Discount:</span>
-                                    <span>$${subtotalAfterDiscount}</span>
+                                ${deliveryFeeHtml}
+                                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c7d2fe; padding-top: 0.5rem;">
+                                    <span>Subtotal Pre-Surcharge:</span>
+                                    <span>$${subtotalPreSurcharge}</span>
                                 </div>
                                 ${surchargeHtml}
                                 <div style="display: flex; justify-content: space-between; border-top: ${surchargeHtml ? '1px solid #c7d2fe; padding-top: 0.5rem;' : 'none;' }">
@@ -741,7 +780,13 @@
             submitBtn.addEventListener('click', handleSubmission);
             closeBtn.addEventListener('click', () => { modalEl.classList.add('hidden'); });
             
+            // Re-run calculations on any delivery radio button change
+            document.querySelectorAll('.delivery-radio').forEach(radio => {
+                radio.addEventListener('change', updateAllCalculations);
+            });
+            
             createJobItem();
+            updateAllCalculations(); // Initial calculation on load
         });
     </script>
 </body>
